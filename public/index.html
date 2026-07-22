@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Dog Simulator</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    margin: 0;
+    font-family: system-ui, sans-serif;
+    background: #f4f5f7;
+    color: #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+  }
+  h1 { margin: 0; font-size: 1.25rem; }
+  #status {
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.9rem;
+    background: white;
+    border-radius: 0.5rem;
+    padding: 0.6rem 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  #status span.label { color: #666; margin-right: 0.3rem; }
+  #status .dot { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; margin-right: 0.3rem; }
+  .dot.on { background: #22c55e; }
+  .dot.off { background: #d1d5db; }
+
+  #arena {
+    position: relative;
+    width: 500px;
+    height: 500px;
+    background:
+      linear-gradient(#e5e7eb 1px, transparent 1px),
+      linear-gradient(90deg, #e5e7eb 1px, transparent 1px);
+    background-size: 25px 25px;
+    background-color: white;
+    border: 2px solid #d1d5db;
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+  #dog-wrap {
+    position: absolute;
+    left: 250px;
+    top: 250px;
+    width: 0;
+    height: 0;
+    transition: transform 0.15s linear;
+  }
+  #dog {
+    font-size: 2.5rem;
+    display: inline-block;
+    transform: translate(-50%, -50%);
+    transition: transform 0.2s ease;
+  }
+  #dog.jumping { transform: translate(-50%, -140%) scale(1.15); }
+  #bubble {
+    position: absolute;
+    left: 1.2rem;
+    top: -1.8rem;
+    background: white;
+    border: 1px solid #999;
+    border-radius: 0.4rem;
+    padding: 0.1rem 0.5rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  #bubble.visible { opacity: 1; }
+</style>
+</head>
+<body>
+  <h1>🐕 Dog Simulator</h1>
+  <div id="status">
+    <span><span id="connected-dot" class="dot off"></span><span class="label">Connecté</span><span id="connected-text">non</span></span>
+    <span><span id="session-dot" class="dot off"></span><span class="label">Session</span><span id="session-text">non</span></span>
+    <span><span class="label">Batterie</span><span id="battery-text">-</span></span>
+  </div>
+
+  <div id="arena">
+    <div id="dog-wrap">
+      <span id="dog">🐕</span>
+      <span id="bubble">Woof!</span>
+    </div>
+  </div>
+
+  <script>
+    const dogWrap = document.getElementById('dog-wrap')
+    const dog = document.getElementById('dog')
+    const bubble = document.getElementById('bubble')
+    const connectedDot = document.getElementById('connected-dot')
+    const connectedText = document.getElementById('connected-text')
+    const sessionDot = document.getElementById('session-dot')
+    const sessionText = document.getElementById('session-text')
+    const batteryText = document.getElementById('battery-text')
+
+    async function poll() {
+      try {
+        const res = await fetch('/state')
+        const state = await res.json()
+
+        dogWrap.style.transform =
+          'translate(' + state.position.x + 'px, ' + state.position.y + 'px) rotate(' + state.position.heading + 'deg)'
+        dog.style.transform = state.jumping ? 'translate(-50%, -140%) scale(1.15)' : 'translate(-50%, -50%)'
+        bubble.classList.toggle('visible', state.barking)
+
+        connectedDot.className = 'dot ' + (state.connected ? 'on' : 'off')
+        connectedText.textContent = state.connected ? 'oui' : 'non'
+        sessionDot.className = 'dot ' + (state.inSession ? 'on' : 'off')
+        sessionText.textContent = state.inSession ? 'oui' : 'non'
+        batteryText.textContent = state.battery + '%'
+      } catch {
+        connectedDot.className = 'dot off'
+        connectedText.textContent = 'erreur'
+      }
+    }
+
+    poll()
+    setInterval(poll, 300)
+  </script>
+</body>
+</html>

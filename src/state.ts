@@ -9,6 +9,8 @@ export interface RobotState {
   battery: number
   connected: boolean
   inSession: boolean
+  barking: boolean
+  jumping: boolean
 }
 
 export const state: RobotState = {
@@ -16,4 +18,6 @@ export const state: RobotState = {
   battery: 100,
   connected: false,
   inSession: false,
+  barking: false,
+  jumping: false,
 }

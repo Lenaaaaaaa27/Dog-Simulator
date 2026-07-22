@@ -3,6 +3,9 @@ import { loadConfig } from './config.js'
 import { state } from './state.js'
 import { MqttTransport } from './mqtt/mqtt-transport.js'
 import { CommandHandler } from './robot/command-handler.js'
+import { SocketIoClient } from './socketio/socketio-client.js'
+import { LiveCommandHandler } from './robot/live-command-handler.js'
+import { startWebServer } from './web-server.js'
 
 const TELEMETRY_INTERVAL_MS = 3000
 
@@ -19,10 +22,17 @@ async function main(): Promise<void> {
     await transport.publishTelemetry(state.battery)
   }, TELEMETRY_INTERVAL_MS)
 
+  const liveCommandHandler = new LiveCommandHandler(state)
+  const socketIoClient = new SocketIoClient(config)
+  socketIoClient.connect((payload) => liveCommandHandler.handle(payload))
+
+  startWebServer(state, config.visualizationPort)
+
   process.on('SIGINT', async () => {
     console.log('\n[simulator] shutting down...')
     clearInterval(telemetryInterval)
     commandHandler.stopMissionSimulation()
+    socketIoClient.disconnect()
     await transport.disconnect()
     state.connected = false
     process.exit(0)
