@@ -22,7 +22,7 @@ export function loadConfig(): SimulatorConfig {
     serialNumber,
     mqttUrl: process.env.MQTT_URL ?? 'mqtt://localhost:1883',
     mqttPassword: process.env.MQTT_PASSWORD,
-    backendUrl: process.env.BACKEND_URL ?? 'http://localhost:3333',
+    backendUrl: (process.env.BACKEND_URL ?? 'http://localhost:3333').replace(/\/+$/, ''),
     robotDogKey: process.env.ROBOT_DOG_KEY,
     visualizationPort: Number(process.env.VISUALIZATION_PORT ?? 4000),
   }
