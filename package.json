@@ -1,0 +1,22 @@
+{
+  "name": "dog-simulator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Simulateur de robot dog — se comporte comme le vrai robot pour tester doggo sans matériel physique.",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "mqtt": "^5.15.1",
+    "socket.io-client": "^4.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.18",
+    "tsx": "4.22.3",
+    "typescript": "5.8.3"
+  }
+}
