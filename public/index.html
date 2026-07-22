@@ -55,10 +55,13 @@
   #dog {
     font-size: 2.5rem;
     display: inline-block;
-    transform: translate(-50%, -50%);
+    /* 🐕 est dessiné tourné vers la gauche — on le retourne pour que le cap 0°
+       (mathématiquement vers +x, donc vers la droite à l'écran) corresponde à
+       son sens de marche visuel. */
+    transform: translate(-50%, -50%) scaleX(-1);
     transition: transform 0.2s ease;
   }
-  #dog.jumping { transform: translate(-50%, -140%) scale(1.15); }
+  #dog.jumping { transform: translate(-50%, -140%) scale(1.15) scaleX(-1); }
   #bubble {
     position: absolute;
     left: 1.2rem;
@@ -73,6 +76,17 @@
     transition: opacity 0.15s ease;
   }
   #bubble.visible { opacity: 1; }
+
+  #recharge-btn {
+    border: 1px solid #999;
+    background: white;
+    border-radius: 0.35rem;
+    padding: 0.15rem 0.6rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  #recharge-btn:hover { background: #f0f0f0; }
+  #recharge-btn:disabled { opacity: 0.5; cursor: default; }
 </style>
 </head>
 <body>
@@ -81,6 +95,7 @@
     <span><span id="connected-dot" class="dot off"></span><span class="label">Connecté</span><span id="connected-text">non</span></span>
     <span><span id="session-dot" class="dot off"></span><span class="label">Session</span><span id="session-text">non</span></span>
     <span><span class="label">Batterie</span><span id="battery-text">-</span></span>
+    <button id="recharge-btn" type="button">Recharger</button>
   </div>
 
   <div id="arena">
@@ -99,6 +114,17 @@
     const sessionDot = document.getElementById('session-dot')
     const sessionText = document.getElementById('session-text')
     const batteryText = document.getElementById('battery-text')
+    const rechargeBtn = document.getElementById('recharge-btn')
+
+    rechargeBtn.addEventListener('click', async () => {
+      rechargeBtn.disabled = true
+      try {
+        await fetch('/recharge', { method: 'POST' })
+        await poll()
+      } finally {
+        rechargeBtn.disabled = false
+      }
+    })
 
     async function poll() {
       try {
@@ -107,7 +133,9 @@
 
         dogWrap.style.transform =
           'translate(' + state.position.x + 'px, ' + state.position.y + 'px) rotate(' + state.position.heading + 'deg)'
-        dog.style.transform = state.jumping ? 'translate(-50%, -140%) scale(1.15)' : 'translate(-50%, -50%)'
+        dog.style.transform = state.jumping
+          ? 'translate(-50%, -140%) scale(1.15) scaleX(-1)'
+          : 'translate(-50%, -50%) scaleX(-1)'
         bubble.classList.toggle('visible', state.barking)
 
         connectedDot.className = 'dot ' + (state.connected ? 'on' : 'off')
@@ -122,7 +150,7 @@
     }
 
     poll()
-    setInterval(poll, 300)
+    setInterval(poll, 100)
   </script>
 </body>
 </html>

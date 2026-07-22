@@ -4,12 +4,20 @@ import type { LiveCommandPayload } from '../socketio/types.js'
 const MOVE_STEP = 30
 const TURN_DEGREES = 15
 const GESTURE_DURATION_MS = 1500
+// Fenêtre après un avancer/reculer pendant laquelle tourner reste possible —
+// façon voiture, impossible de tourner à l'arrêt. Le frontend renvoie un
+// avancer/reculer toutes les MOVEMENT_TICK_MS (100ms) tant que la touche est
+// tenue, donc cette fenêtre reste largement au-dessus de ce rythme sans
+// pour autant laisser tourner plus d'un instant après avoir relâché.
+const STEERING_GRACE_MS = 400
 
 /**
  * Traduit une commande live (mouvement/aboiement/saut) en mise à jour de
  * l'état partagé — c'est ce que la page de visualisation lit ensuite.
  */
 export class LiveCommandHandler {
+  private lastMoveAt = 0
+
   constructor(private readonly state: RobotState) {}
 
   handle(payload: LiveCommandPayload): void {
@@ -18,15 +26,17 @@ export class LiveCommandHandler {
     switch (payload.actionCode) {
       case 'MOVE_FORWARD':
         this.translate(1)
+        this.lastMoveAt = Date.now()
         break
       case 'MOVE_BACKWARD':
         this.translate(-1)
+        this.lastMoveAt = Date.now()
         break
       case 'MOVE_LEFT':
-        this.state.position.heading = (this.state.position.heading - TURN_DEGREES + 360) % 360
+        this.steer(-TURN_DEGREES)
         break
       case 'MOVE_RIGHT':
-        this.state.position.heading = (this.state.position.heading + TURN_DEGREES) % 360
+        this.steer(TURN_DEGREES)
         break
       case 'STOP':
         break
@@ -45,6 +55,14 @@ export class LiveCommandHandler {
     const radians = (this.state.position.heading * Math.PI) / 180
     this.state.position.x += Math.cos(radians) * MOVE_STEP * direction
     this.state.position.y += Math.sin(radians) * MOVE_STEP * direction
+  }
+
+  private steer(deltaDegrees: number): void {
+    if (Date.now() - this.lastMoveAt > STEERING_GRACE_MS) {
+      console.log('[simulator] turn ignored — robot must be moving to steer')
+      return
+    }
+    this.state.position.heading = (this.state.position.heading + deltaDegrees + 360) % 360
   }
 
   private trigger(flag: 'barking' | 'jumping'): void {
