@@ -10,6 +10,9 @@ const GESTURE_DURATION_MS = 1500
 // tenue, donc cette fenêtre reste largement au-dessus de ce rythme sans
 // pour autant laisser tourner plus d'un instant après avoir relâché.
 const STEERING_GRACE_MS = 400
+// Zone visible de la page de visualisation (arène 500x500, centrée) — le
+// chien s'arrête aux bords au lieu d'en sortir et devenir invisible.
+const ARENA_BOUND = 220
 
 /**
  * Traduit une commande live (mouvement/aboiement/saut) en mise à jour de
@@ -53,8 +56,10 @@ export class LiveCommandHandler {
 
   private translate(direction: 1 | -1): void {
     const radians = (this.state.position.heading * Math.PI) / 180
-    this.state.position.x += Math.cos(radians) * MOVE_STEP * direction
-    this.state.position.y += Math.sin(radians) * MOVE_STEP * direction
+    const nextX = this.state.position.x + Math.cos(radians) * MOVE_STEP * direction
+    const nextY = this.state.position.y + Math.sin(radians) * MOVE_STEP * direction
+    this.state.position.x = clamp(nextX, -ARENA_BOUND, ARENA_BOUND)
+    this.state.position.y = clamp(nextY, -ARENA_BOUND, ARENA_BOUND)
   }
 
   private steer(deltaDegrees: number): void {
@@ -71,4 +76,8 @@ export class LiveCommandHandler {
       this.state[flag] = false
     }, GESTURE_DURATION_MS)
   }
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max)
 }

@@ -1,5 +1,5 @@
 import mqtt, { type MqttClient } from 'mqtt'
-import type { SimulatorConfig } from '../config.js'
+import type { ResolvedSimulatorConfig } from '../config.js'
 import type { RobotCommandPayload } from './types.js'
 
 /**
@@ -9,7 +9,7 @@ import type { RobotCommandPayload } from './types.js'
 export class MqttTransport {
   private client: MqttClient | undefined
 
-  constructor(private readonly config: SimulatorConfig) {}
+  constructor(private readonly config: ResolvedSimulatorConfig) {}
 
   async connect(onCommand: (payload: RobotCommandPayload) => void): Promise<void> {
     const { dogId, mqttUrl, mqttPassword } = this.config

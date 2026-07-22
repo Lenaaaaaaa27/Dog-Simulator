@@ -1,5 +1,6 @@
 import 'dotenv/config'
-import { loadConfig } from './config.js'
+import { loadConfig, type ResolvedSimulatorConfig } from './config.js'
+import { resolveDogId } from './resolve-dog-id.js'
 import { state } from './state.js'
 import { MqttTransport } from './mqtt/mqtt-transport.js'
 import { CommandHandler } from './robot/command-handler.js'
@@ -10,7 +11,11 @@ import { startWebServer } from './web-server.js'
 const TELEMETRY_INTERVAL_MS = 3000
 
 async function main(): Promise<void> {
-  const config = loadConfig()
+  const baseConfig = loadConfig()
+  const dogId = await resolveDogId(baseConfig.backendUrl, baseConfig.serialNumber)
+  console.log(`[simulator] numéro de série ${baseConfig.serialNumber} -> dogId ${dogId}`)
+
+  const config: ResolvedSimulatorConfig = { ...baseConfig, dogId }
   const transport = new MqttTransport(config)
   const commandHandler = new CommandHandler(state, transport)
 

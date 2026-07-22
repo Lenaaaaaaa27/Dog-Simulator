@@ -1,5 +1,5 @@
 import { io, type Socket } from 'socket.io-client'
-import type { SimulatorConfig } from '../config.js'
+import type { ResolvedSimulatorConfig } from '../config.js'
 import type { LiveCommandPayload } from './types.js'
 
 /**
@@ -10,18 +10,18 @@ import type { LiveCommandPayload } from './types.js'
 export class SocketIoClient {
   private socket: Socket | undefined
 
-  constructor(private readonly config: SimulatorConfig) {}
+  constructor(private readonly config: ResolvedSimulatorConfig) {}
 
   connect(onCommand: (payload: LiveCommandPayload) => void): void {
-    const { dogId, robotDogKey, backendWsUrl } = this.config
+    const { dogId, robotDogKey, backendUrl } = this.config
 
-    const socket = io(`${backendWsUrl}/ws/robots`, {
+    const socket = io(`${backendUrl}/ws/robots`, {
       auth: { dogId, deviceKey: robotDogKey },
     })
     this.socket = socket
 
     socket.on('connect', () => {
-      console.log(`[simulator] WS connected to ${backendWsUrl}/ws/robots`)
+      console.log(`[simulator] WS connected to ${backendUrl}/ws/robots`)
     })
 
     socket.on('connect_error', (err) => {
