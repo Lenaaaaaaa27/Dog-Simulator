@@ -194,6 +194,7 @@
         sessionDot.className = 'dot ' + (state.inSession ? 'on' : 'off')
         sessionText.textContent = state.inSession ? 'oui' : 'non'
         batteryText.textContent = state.battery + '%'
+        toggleOnlineBtn.textContent = state.online ? 'Passer offline' : 'Revenir online'
       } catch {
         connectedDot.className = 'dot off'
         connectedText.textContent = 'erreur'
