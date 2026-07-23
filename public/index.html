@@ -98,6 +98,7 @@
     <button id="recharge-btn" type="button">Recharger</button>
     <button id="drain-battery-btn" type="button">Vider la batterie</button>
     <button id="skip-ack-btn" type="button">Ne pas confirmer le prochain démarrage</button>
+    <button id="fail-step-btn" type="button">Faire échouer le step en cours</button>
   </div>
 
   <div id="arena">
@@ -148,6 +149,17 @@
         await fetch('/scenario/skip-next-mission-ack', { method: 'POST' })
       } finally {
         skipAckBtn.disabled = false
+      }
+    })
+
+    const failStepBtn = document.getElementById('fail-step-btn')
+
+    failStepBtn.addEventListener('click', async () => {
+      failStepBtn.disabled = true
+      try {
+        await fetch('/scenario/fail-next-step', { method: 'POST' })
+      } finally {
+        failStepBtn.disabled = false
       }
     })
 

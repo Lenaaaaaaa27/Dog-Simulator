@@ -91,6 +91,15 @@ export class CommandHandler {
       }
 
       const step = steps[stepIndex]
+
+      if (this.state.scenario.failNextStep) {
+        this.state.scenario.failNextStep = false
+        await this.transport.publishMissionStep(payload.missionId, step.stepId, 'FAILED')
+        console.log(`[simulator] mission step ${step.stepId} (${step.actionCode}) → FAILED (scénario)`)
+        this.stopMissionSimulation()
+        return
+      }
+
       await this.transport.publishMissionStep(payload.missionId, step.stepId, 'COMPLETED')
       console.log(`[simulator] mission step ${step.stepId} (${step.actionCode}) → COMPLETED`)
       stepIndex++

@@ -42,6 +42,14 @@ export function startWebServer(state: RobotState, port: number): void {
       return
     }
 
+    if (req.url === '/scenario/fail-next-step' && req.method === 'POST') {
+      state.scenario.failNextStep = true
+      console.log('[simulator] scénario armé : le step en cours de simulation échouera')
+      res.writeHead(200, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ failNextStep: true }))
+      return
+    }
+
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
     res.end(html)
   })
