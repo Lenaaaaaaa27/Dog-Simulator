@@ -20,7 +20,7 @@ export class MqttTransport {
       password: mqttPassword,
       will: {
         topic: `robot/${dogId}/connected`,
-        payload: 'offline',
+        payload: JSON.stringify({ status: 'disconnected', reason: 'lwt_timeout' }),
         qos: 1,
         retain: true,
       },
@@ -28,7 +28,11 @@ export class MqttTransport {
 
     console.log(`[simulator] connected to ${mqttUrl} as dog ${dogId}`)
 
-    await this.client.publishAsync(`robot/${dogId}/connected`, 'online', { qos: 1, retain: true })
+    await this.client.publishAsync(
+      `robot/${dogId}/connected`,
+      JSON.stringify({ status: 'connected' }),
+      { qos: 1, retain: true }
+    )
     await this.client.subscribeAsync(`robot/${dogId}/command`)
 
     this.client.on('message', (topic, message) => {
@@ -70,10 +74,11 @@ export class MqttTransport {
   async disconnect(): Promise<void> {
     if (!this.client) return
 
-    await this.client.publishAsync(`robot/${this.config.dogId}/connected`, 'offline', {
-      qos: 1,
-      retain: true,
-    })
+    await this.client.publishAsync(
+      `robot/${this.config.dogId}/connected`,
+      JSON.stringify({ status: 'disconnected', reason: 'clean' }),
+      { qos: 1, retain: true }
+    )
     await this.client.endAsync()
     this.client = undefined
   }
