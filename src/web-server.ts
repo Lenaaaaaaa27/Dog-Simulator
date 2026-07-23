@@ -26,6 +26,14 @@ export function startWebServer(state: RobotState, port: number): void {
       return
     }
 
+    if (req.url === '/scenario/drain-battery' && req.method === 'POST') {
+      state.battery = 5
+      console.log('[simulator] scénario : batterie vidée à 5%')
+      res.writeHead(200, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ battery: state.battery }))
+      return
+    }
+
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
     res.end(html)
   })

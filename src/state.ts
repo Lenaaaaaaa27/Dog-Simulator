@@ -4,6 +4,11 @@ export interface RobotPosition {
   heading: number
 }
 
+export interface RobotScenarioFlags {
+  skipNextMissionAck: boolean
+  failNextStep: boolean
+}
+
 export interface RobotState {
   position: RobotPosition
   battery: number
@@ -11,6 +16,8 @@ export interface RobotState {
   inSession: boolean
   barking: boolean
   jumping: boolean
+  online: boolean
+  scenario: RobotScenarioFlags
 }
 
 export const state: RobotState = {
@@ -20,4 +27,9 @@ export const state: RobotState = {
   inSession: false,
   barking: false,
   jumping: false,
+  online: true,
+  scenario: {
+    skipNextMissionAck: false,
+    failNextStep: false,
+  },
 }

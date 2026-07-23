@@ -96,6 +96,7 @@
     <span><span id="session-dot" class="dot off"></span><span class="label">Session</span><span id="session-text">non</span></span>
     <span><span class="label">Batterie</span><span id="battery-text">-</span></span>
     <button id="recharge-btn" type="button">Recharger</button>
+    <button id="drain-battery-btn" type="button">Vider la batterie</button>
   </div>
 
   <div id="arena">
@@ -123,6 +124,18 @@
         await poll()
       } finally {
         rechargeBtn.disabled = false
+      }
+    })
+
+    const drainBatteryBtn = document.getElementById('drain-battery-btn')
+
+    drainBatteryBtn.addEventListener('click', async () => {
+      drainBatteryBtn.disabled = true
+      try {
+        await fetch('/scenario/drain-battery', { method: 'POST' })
+        await poll()
+      } finally {
+        drainBatteryBtn.disabled = false
       }
     })
 
