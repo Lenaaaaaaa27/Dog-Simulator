@@ -67,6 +67,12 @@ export class CommandHandler {
   private simulateMission(payload: RobotCommandPayload): void {
     this.stopMissionSimulation()
 
+    // Sans cet ACK, le backend reste bloqué en PENDING et ignore tous les
+    // steps qu'on publie ensuite (voir handle-robot-mission-update.use-case.ts
+    // côté backend) — le run finit par timeout après 60s pour rien.
+    void this.transport.publishState('IN_MISSION')
+    console.log('[simulator] mission ACK envoyé : state=IN_MISSION')
+
     const steps = payload.steps ?? []
     let stepIndex = 0
 

@@ -71,6 +71,14 @@ export class MqttTransport {
     )
   }
 
+  async publishState(state: string): Promise<void> {
+    if (!this.client) return
+
+    await this.client.publishAsync(`robot/${this.config.dogId}/state`, JSON.stringify({ state }), {
+      qos: 1,
+    })
+  }
+
   async disconnect(): Promise<void> {
     if (!this.client) return
 
