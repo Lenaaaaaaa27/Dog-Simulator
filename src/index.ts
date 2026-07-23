@@ -17,7 +17,17 @@ async function main(): Promise<void> {
 
   const config: ResolvedSimulatorConfig = { ...baseConfig, dogId }
   const transport = new MqttTransport(config)
-  const commandHandler = new CommandHandler(state, transport)
+
+  const liveCommandHandler = new LiveCommandHandler(state)
+  const socketIoClient = new SocketIoClient(config)
+
+  const commandHandler = new CommandHandler(state, transport, {
+    // Le WS n'est ouvert que le temps d'une session : à grande échelle, des
+    // dizaines de milliers de robots connectés en permanence pour rien n'a
+    // aucun sens alors que le reste (télémétrie, missions) passe déjà par MQTT.
+    onSessionStart: () => socketIoClient.connect((payload) => liveCommandHandler.handle(payload)),
+    onSessionEnd: () => socketIoClient.disconnect(),
+  })
 
   await transport.connect((payload) => commandHandler.handle(payload))
   state.connected = true
@@ -26,10 +36,6 @@ async function main(): Promise<void> {
     state.battery = Math.max(0, state.battery - 1)
     await transport.publishTelemetry(state.battery)
   }, TELEMETRY_INTERVAL_MS)
-
-  const liveCommandHandler = new LiveCommandHandler(state)
-  const socketIoClient = new SocketIoClient(config)
-  socketIoClient.connect((payload) => liveCommandHandler.handle(payload))
 
   startWebServer(state, config.visualizationPort)
 

@@ -13,6 +13,10 @@ export class SocketIoClient {
   constructor(private readonly config: ResolvedSimulatorConfig) {}
 
   connect(onCommand: (payload: LiveCommandPayload) => void): void {
+    // Appelé à chaque nouvelle session (le socket n'est plus permanent) : on
+    // ferme l'éventuelle connexion précédente pour ne pas la laisser fuiter.
+    this.disconnect()
+
     const { dogId, robotDogKey, backendUrl } = this.config
 
     const socket = io(`${backendUrl}/ws/robots`, {

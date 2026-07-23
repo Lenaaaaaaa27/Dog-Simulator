@@ -4,16 +4,24 @@ import type { MqttTransport } from '../mqtt/mqtt-transport.js'
 
 const MISSION_STEP_INTERVAL_MS = 2000
 
+export interface SessionSocketHooks {
+  onSessionStart: () => void
+  onSessionEnd: () => void
+}
+
 /**
  * Logique métier du robot simulé : que faire d'une commande reçue. Ne parle
- * jamais MQTT directement, seulement via les méthodes de publication du transport.
+ * jamais MQTT ni WebSocket directement — pour le WS, il ne fait qu'appeler les
+ * hooks fournis (le socket n'est ouvert que le temps d'une session, à grande
+ * échelle on ne peut pas se permettre une connexion WS permanente par robot).
  */
 export class CommandHandler {
   private missionInterval: ReturnType<typeof setInterval> | undefined
 
   constructor(
     private readonly state: RobotState,
-    private readonly transport: MqttTransport
+    private readonly transport: MqttTransport,
+    private readonly sessionSocket: SessionSocketHooks
   ) {}
 
   handle(payload: RobotCommandPayload): void {
@@ -22,9 +30,11 @@ export class CommandHandler {
     switch (payload.type) {
       case 'start_session':
         this.state.inSession = true
+        this.callSessionHook('onSessionStart', () => this.sessionSocket.onSessionStart())
         break
       case 'end_session':
         this.state.inSession = false
+        this.callSessionHook('onSessionEnd', () => this.sessionSocket.onSessionEnd())
         break
       case 'start_mission':
         this.simulateMission(payload)
@@ -33,6 +43,17 @@ export class CommandHandler {
       case 'emergency_stop':
         this.stopMissionSimulation()
         break
+    }
+  }
+
+  // Isolé de la catch générique "parse payload" de MqttTransport : sans ça, un
+  // échec de connexion WS synchrone serait diagnostiqué à tort comme un payload
+  // MQTT invalide.
+  private callSessionHook(name: keyof SessionSocketHooks, hook: () => void): void {
+    try {
+      hook()
+    } catch (error) {
+      console.error(`[simulator] session socket hook "${name}" failed:`, error)
     }
   }
 
