@@ -75,6 +75,14 @@ export function startWebServer(state: RobotState, transport: MqttTransport, port
       return
     }
 
+    if (req.url === '/scenario/phantom-mission' && req.method === 'POST') {
+      void transport.publishState('IN_MISSION')
+      console.log('[simulator] scénario : state=IN_MISSION publié sans mission en cours (mission fantôme)')
+      res.writeHead(200, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ ok: true }))
+      return
+    }
+
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
     res.end(html)
   })

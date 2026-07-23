@@ -102,6 +102,7 @@
     <button id="toggle-online-btn" type="button">Passer offline</button>
     <button id="reboot-btn" type="button">Simuler un reboot</button>
     <button id="error-btn" type="button">Simuler une erreur</button>
+    <button id="phantom-mission-btn" type="button">Mission fantôme</button>
   </div>
 
   <div id="arena">
@@ -197,6 +198,17 @@
         await fetch('/scenario/error', { method: 'POST' })
       } finally {
         errorBtn.disabled = false
+      }
+    })
+
+    const phantomMissionBtn = document.getElementById('phantom-mission-btn')
+
+    phantomMissionBtn.addEventListener('click', async () => {
+      phantomMissionBtn.disabled = true
+      try {
+        await fetch('/scenario/phantom-mission', { method: 'POST' })
+      } finally {
+        phantomMissionBtn.disabled = false
       }
     })
 
