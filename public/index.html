@@ -100,6 +100,8 @@
     <button id="skip-ack-btn" type="button">Ne pas confirmer le prochain démarrage</button>
     <button id="fail-step-btn" type="button">Faire échouer le step en cours</button>
     <button id="toggle-online-btn" type="button">Passer offline</button>
+    <button id="reboot-btn" type="button">Simuler un reboot</button>
+    <button id="error-btn" type="button">Simuler une erreur</button>
   </div>
 
   <div id="arena">
@@ -174,6 +176,27 @@
         toggleOnlineBtn.textContent = online ? 'Passer offline' : 'Revenir online'
       } finally {
         toggleOnlineBtn.disabled = false
+      }
+    })
+
+    const rebootBtn = document.getElementById('reboot-btn')
+    const errorBtn = document.getElementById('error-btn')
+
+    rebootBtn.addEventListener('click', async () => {
+      rebootBtn.disabled = true
+      try {
+        await fetch('/scenario/reboot', { method: 'POST' })
+      } finally {
+        rebootBtn.disabled = false
+      }
+    })
+
+    errorBtn.addEventListener('click', async () => {
+      errorBtn.disabled = true
+      try {
+        await fetch('/scenario/error', { method: 'POST' })
+      } finally {
+        errorBtn.disabled = false
       }
     })
 

@@ -79,6 +79,35 @@ export class MqttTransport {
     })
   }
 
+  async publishReboot(): Promise<void> {
+    if (!this.client) return
+
+    await this.client.publishAsync(
+      `robot/${this.config.dogId}/system`,
+      JSON.stringify({
+        firmwareVersion: '1.4.2',
+        bootReason: 'watchdog_reset',
+        uptimeBeforeRebootSec: 3600,
+      }),
+      { qos: 1 }
+    )
+  }
+
+  async publishError(): Promise<void> {
+    if (!this.client) return
+
+    await this.client.publishAsync(
+      `robot/${this.config.dogId}/error`,
+      JSON.stringify({
+        code: 'MOTOR_STALL',
+        component: 'locomotion',
+        message: 'Moteur bloqué, arrêt de sécurité déclenché',
+        severity: 'critical',
+      }),
+      { qos: 1 }
+    )
+  }
+
   async disconnect(): Promise<void> {
     if (!this.client) return
 

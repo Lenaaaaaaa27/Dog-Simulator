@@ -3,12 +3,13 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import type { RobotState } from './state.js'
+import type { MqttTransport } from './mqtt/mqtt-transport.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const INDEX_HTML_PATH = join(__dirname, '..', 'public', 'index.html')
 const MAX_BATTERY = 100
 
-export function startWebServer(state: RobotState, port: number): void {
+export function startWebServer(state: RobotState, transport: MqttTransport, port: number): void {
   const html = readFileSync(INDEX_HTML_PATH, 'utf-8')
 
   const server = createServer((req, res) => {
@@ -55,6 +56,22 @@ export function startWebServer(state: RobotState, port: number): void {
       console.log(`[simulator] scénario : télémétrie ${state.online ? 'reprise' : 'coupée'}`)
       res.writeHead(200, { 'Content-Type': 'application/json' })
       res.end(JSON.stringify({ online: state.online }))
+      return
+    }
+
+    if (req.url === '/scenario/reboot' && req.method === 'POST') {
+      void transport.publishReboot()
+      console.log('[simulator] scénario : reboot simulé (watchdog_reset)')
+      res.writeHead(200, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ ok: true }))
+      return
+    }
+
+    if (req.url === '/scenario/error' && req.method === 'POST') {
+      void transport.publishError()
+      console.log('[simulator] scénario : erreur robot simulée (MOTOR_STALL)')
+      res.writeHead(200, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ ok: true }))
       return
     }
 

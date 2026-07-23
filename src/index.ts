@@ -38,7 +38,7 @@ async function main(): Promise<void> {
     await transport.publishTelemetry(state.battery)
   }, TELEMETRY_INTERVAL_MS)
 
-  startWebServer(state, config.visualizationPort)
+  startWebServer(state, transport, config.visualizationPort)
 
   process.on('SIGINT', async () => {
     console.log('\n[simulator] shutting down...')
