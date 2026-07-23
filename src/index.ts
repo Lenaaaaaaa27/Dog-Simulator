@@ -33,6 +33,7 @@ async function main(): Promise<void> {
   state.connected = true
 
   const telemetryInterval = setInterval(async () => {
+    if (!state.online) return
     state.battery = Math.max(0, state.battery - 1)
     await transport.publishTelemetry(state.battery)
   }, TELEMETRY_INTERVAL_MS)

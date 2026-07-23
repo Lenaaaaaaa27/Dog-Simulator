@@ -99,6 +99,7 @@
     <button id="drain-battery-btn" type="button">Vider la batterie</button>
     <button id="skip-ack-btn" type="button">Ne pas confirmer le prochain démarrage</button>
     <button id="fail-step-btn" type="button">Faire échouer le step en cours</button>
+    <button id="toggle-online-btn" type="button">Passer offline</button>
   </div>
 
   <div id="arena">
@@ -160,6 +161,19 @@
         await fetch('/scenario/fail-next-step', { method: 'POST' })
       } finally {
         failStepBtn.disabled = false
+      }
+    })
+
+    const toggleOnlineBtn = document.getElementById('toggle-online-btn')
+
+    toggleOnlineBtn.addEventListener('click', async () => {
+      toggleOnlineBtn.disabled = true
+      try {
+        const res = await fetch('/scenario/toggle-online', { method: 'POST' })
+        const { online } = await res.json()
+        toggleOnlineBtn.textContent = online ? 'Passer offline' : 'Revenir online'
+      } finally {
+        toggleOnlineBtn.disabled = false
       }
     })
 
