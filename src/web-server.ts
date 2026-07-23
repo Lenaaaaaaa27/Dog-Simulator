@@ -60,7 +60,7 @@ export function startWebServer(state: RobotState, transport: MqttTransport, port
     }
 
     if (req.url === '/scenario/reboot' && req.method === 'POST') {
-      void transport.publishReboot()
+      void transport.publishReboot('watchdog_reset', 3600)
       console.log('[simulator] scénario : reboot simulé (watchdog_reset)')
       res.writeHead(200, { 'Content-Type': 'application/json' })
       res.end(JSON.stringify({ ok: true }))
