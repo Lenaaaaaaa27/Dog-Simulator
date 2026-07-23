@@ -64,11 +64,12 @@ export class CommandHandler {
     }
   }
 
-  private simulateMission(payload: RobotCommandPayload): void {
+  private async simulateMission(payload: RobotCommandPayload): Promise<void> {
     this.stopMissionSimulation()
 
     if (this.state.scenario.skipNextMissionAck) {
       this.state.scenario.skipNextMissionAck = false
+      this.state.scenario.failNextStep = false
       console.log(
         '[simulator] scénario actif : démarrage de mission NON confirmé (le backend va timeout après 60s)'
       )
@@ -78,7 +79,7 @@ export class CommandHandler {
     // Sans cet ACK, le backend reste bloqué en PENDING et ignore tous les
     // steps qu'on publie ensuite (voir handle-robot-mission-update.use-case.ts
     // côté backend) — le run finit par timeout après 60s pour rien.
-    void this.transport.publishState('IN_MISSION')
+    await this.transport.publishState('IN_MISSION')
     console.log('[simulator] mission ACK envoyé : state=IN_MISSION')
 
     const steps = payload.steps ?? []
@@ -86,6 +87,7 @@ export class CommandHandler {
 
     this.missionInterval = setInterval(async () => {
       if (stepIndex >= steps.length) {
+        this.state.scenario.failNextStep = false
         this.stopMissionSimulation()
         return
       }
