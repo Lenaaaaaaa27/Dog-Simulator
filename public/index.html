@@ -97,6 +97,7 @@
     <span><span class="label">Batterie</span><span id="battery-text">-</span></span>
     <button id="recharge-btn" type="button">Recharger</button>
     <button id="drain-battery-btn" type="button">Vider la batterie</button>
+    <button id="skip-ack-btn" type="button">Ne pas confirmer le prochain démarrage</button>
   </div>
 
   <div id="arena">
@@ -136,6 +137,17 @@
         await poll()
       } finally {
         drainBatteryBtn.disabled = false
+      }
+    })
+
+    const skipAckBtn = document.getElementById('skip-ack-btn')
+
+    skipAckBtn.addEventListener('click', async () => {
+      skipAckBtn.disabled = true
+      try {
+        await fetch('/scenario/skip-next-mission-ack', { method: 'POST' })
+      } finally {
+        skipAckBtn.disabled = false
       }
     })
 
