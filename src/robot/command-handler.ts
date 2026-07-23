@@ -1,8 +1,7 @@
 import type { RobotState } from '../state.js'
 import type { RobotCommandPayload } from '../mqtt/types.js'
 import type { MqttTransport } from '../mqtt/mqtt-transport.js'
-
-const MISSION_STEP_INTERVAL_MS = 2000
+import { MissionActionSimulator } from './mission-action-simulator.js'
 
 export interface SessionSocketHooks {
   onSessionStart: () => void
@@ -16,13 +15,16 @@ export interface SessionSocketHooks {
  * échelle on ne peut pas se permettre une connexion WS permanente par robot).
  */
 export class CommandHandler {
-  private missionInterval: ReturnType<typeof setInterval> | undefined
+  private missionAbort: AbortController | undefined
+  private readonly actionSimulator: MissionActionSimulator
 
   constructor(
     private readonly state: RobotState,
     private readonly transport: MqttTransport,
     private readonly sessionSocket: SessionSocketHooks
-  ) {}
+  ) {
+    this.actionSimulator = new MissionActionSimulator(state)
+  }
 
   handle(payload: RobotCommandPayload): void {
     console.log(`[simulator] command received: ${payload.type}`)
@@ -37,7 +39,7 @@ export class CommandHandler {
         this.callSessionHook('onSessionEnd', () => this.sessionSocket.onSessionEnd())
         break
       case 'start_mission':
-        this.simulateMission(payload)
+        void this.simulateMission(payload)
         break
       case 'stop_mission':
       case 'emergency_stop':
@@ -58,10 +60,8 @@ export class CommandHandler {
   }
 
   stopMissionSimulation(): void {
-    if (this.missionInterval) {
-      clearInterval(this.missionInterval)
-      this.missionInterval = undefined
-    }
+    this.missionAbort?.abort()
+    this.missionAbort = undefined
   }
 
   private async simulateMission(payload: RobotCommandPayload): Promise<void> {
@@ -82,17 +82,19 @@ export class CommandHandler {
     await this.transport.publishState('IN_MISSION')
     console.log('[simulator] mission ACK envoyé : state=IN_MISSION')
 
+    const abort = new AbortController()
+    this.missionAbort = abort
     const steps = payload.steps ?? []
-    let stepIndex = 0
 
-    this.missionInterval = setInterval(async () => {
-      if (stepIndex >= steps.length) {
-        this.state.scenario.failNextStep = false
-        this.stopMissionSimulation()
-        return
-      }
+    for (const step of steps) {
+      if (abort.signal.aborted) return
 
-      const step = steps[stepIndex]
+      // Traduit le step en mouvement/aboiement visible sur la page de
+      // visualisation, pendant la durée réellement déclarée par la mission
+      // (pas un tick fixe) — sans ça le chien ne bouge jamais à l'écran.
+      await this.actionSimulator.run(step.actionCode, step.parameters, abort.signal)
+
+      if (abort.signal.aborted) return
 
       if (this.state.scenario.failNextStep) {
         this.state.scenario.failNextStep = false
@@ -104,7 +106,9 @@ export class CommandHandler {
 
       await this.transport.publishMissionStep(payload.missionId, step.stepId, 'COMPLETED')
       console.log(`[simulator] mission step ${step.stepId} (${step.actionCode}) → COMPLETED`)
-      stepIndex++
-    }, MISSION_STEP_INTERVAL_MS)
+    }
+
+    this.state.scenario.failNextStep = false
+    this.missionAbort = undefined
   }
 }
