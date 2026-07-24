@@ -79,15 +79,15 @@ export class MqttTransport {
     })
   }
 
-  async publishReboot(): Promise<void> {
+  async publishReboot(bootReason: string, uptimeBeforeRebootSec?: number): Promise<void> {
     if (!this.client) return
 
     await this.client.publishAsync(
       `robot/${this.config.dogId}/system`,
       JSON.stringify({
-        firmwareVersion: '1.4.2',
-        bootReason: 'watchdog_reset',
-        uptimeBeforeRebootSec: 3600,
+        firmwareVersion: this.config.firmwareVersion,
+        bootReason,
+        ...(uptimeBeforeRebootSec !== undefined && { uptimeBeforeRebootSec }),
       }),
       { qos: 1 }
     )

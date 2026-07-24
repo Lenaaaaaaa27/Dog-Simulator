@@ -32,6 +32,9 @@ async function main(): Promise<void> {
   await transport.connect((payload) => commandHandler.handle(payload))
   state.connected = true
 
+  await transport.publishReboot('power_on')
+  console.log(`[simulator] firmware ${config.firmwareVersion} rapporté au backend (power_on)`)
+
   const telemetryInterval = setInterval(async () => {
     if (!state.online) return
     state.battery = Math.max(0, state.battery - 1)

@@ -5,6 +5,7 @@ export interface SimulatorConfig {
   backendUrl: string
   robotDogKey?: string
   visualizationPort: number
+  firmwareVersion: string
 }
 
 /** Config une fois le numéro de série résolu en id auprès du backend. */
@@ -25,5 +26,6 @@ export function loadConfig(): SimulatorConfig {
     backendUrl: (process.env.BACKEND_URL ?? 'http://localhost:3333').replace(/\/+$/, ''),
     robotDogKey: process.env.ROBOT_DOG_KEY,
     visualizationPort: Number(process.env.VISUALIZATION_PORT ?? 4000),
+    firmwareVersion: process.env.FIRMWARE_VERSION ?? '1.0.0',
   }
 }
