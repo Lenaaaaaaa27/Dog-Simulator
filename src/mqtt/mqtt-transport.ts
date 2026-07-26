@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import mqtt, { type MqttClient } from 'mqtt'
 import type { ResolvedSimulatorConfig } from '../config.js'
 import type { RobotCommandPayload } from './types.js'
@@ -12,12 +13,13 @@ export class MqttTransport {
   constructor(private readonly config: ResolvedSimulatorConfig) {}
 
   async connect(onCommand: (payload: RobotCommandPayload) => void): Promise<void> {
-    const { dogId, mqttUrl, mqttPassword } = this.config
+    const { dogId, mqttUrl, mqttPassword, mqttCaPath } = this.config
 
     this.client = await mqtt.connectAsync(mqttUrl, {
       clientId: `dog-simulator-${dogId}`,
       username: dogId,
       password: mqttPassword,
+      ...(mqttCaPath ? { ca: readFileSync(mqttCaPath) } : {}),
       will: {
         topic: `robot/${dogId}/connected`,
         payload: JSON.stringify({ status: 'disconnected', reason: 'lwt_timeout' }),
